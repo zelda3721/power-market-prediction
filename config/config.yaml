@@ -1,0 +1,162 @@
+# 电力市场预测系统配置文件
+
+# 数据配置
+data:
+  # 数据时间范围
+  historical_days: 365  # 使用多少天的历史数据
+  prediction_horizon: 96  # 预测96个时间点
+  time_interval_minutes: 15  # 每个时间点15分钟
+  
+  # 特征工程配置
+  features:
+    # 滞后期数
+    lag_periods: [1, 4, 96, 672]  # 1期、1小时、1天、1周
+    # 滚动窗口
+    rolling_windows: [4, 96, 672]  # 1小时、1天、1周
+    # 是否使用节假日特征
+    use_holiday_features: true
+    # 是否使用天气特征
+    use_weather_features: false
+
+# 模型配置
+models:
+  # 传统机器学习模型
+  traditional:
+    xgboost:
+      enabled: true
+      params:
+        n_estimators: 1000
+        max_depth: 8
+        learning_rate: 0.05
+        subsample: 0.8
+        colsample_bytree: 0.8
+        objective: 'reg:squarederror'
+        n_jobs: -1
+        random_state: 42
+        early_stopping_rounds: 50
+        
+    lightgbm:
+      enabled: true
+      params:
+        n_estimators: 1000
+        num_leaves: 31
+        learning_rate: 0.05
+        feature_fraction: 0.8
+        bagging_fraction: 0.8
+        bagging_freq: 5
+        objective: 'regression'
+        metric: 'rmse'
+        n_jobs: -1
+        random_state: 42
+        early_stopping_rounds: 50
+        
+    ensemble:
+      enabled: true
+      method: 'stacking'  # stacking, blending, voting
+      meta_model: 'linear'  # linear, xgboost
+      
+  # 深度学习模型
+  deep_learning:
+    model_name: 'PatchTST'  # PatchTST, TimesNet, DLinear
+    params:
+      seq_len: 672  # 输入序列长度（7天）
+      pred_len: 96   # 预测长度
+      d_model: 512
+      n_heads: 8
+      e_layers: 3
+      d_ff: 2048
+      dropout: 0.1
+      batch_size: 32
+      learning_rate: 0.0001
+      epochs: 100
+      patience: 10
+
+# 训练配置
+training:
+  # 验证集比例
+  validation_split: 0.2
+  # 测试集比例
+  test_split: 0.1
+  # 交叉验证折数
+  cv_folds: 5
+  # 时序交叉验证
+  time_series_cv:
+    enabled: true
+    n_splits: 5
+    gap: 96  # 训练集和验证集之间的间隔（避免数据泄露）
+  
+  # 超参数优化
+  hyperparameter_tuning:
+    enabled: true
+    method: 'optuna'  # optuna, grid_search, random_search
+    n_trials: 100
+    timeout: 3600  # 秒
+
+# 预测配置
+prediction:
+  # 预测模式
+  mode: 'ensemble'  # single, ensemble
+  # 置信区间
+  confidence_interval: 0.95
+  # 是否返回特征重要性
+  return_feature_importance: true
+  # 缓存预测结果
+  cache_predictions: true
+  cache_ttl: 3600  # 秒
+
+# 评估配置
+evaluation:
+  metrics:
+    - mae
+    - rmse
+    - mape
+    - direction_accuracy
+    - peak_valley_accuracy
+  # 是否生成评估报告
+  generate_report: true
+  # 报告格式
+  report_format: 'html'  # html, pdf, markdown
+
+# 日志配置
+logging:
+  # 日志级别
+  level: INFO
+  # 日志格式
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  # 是否输出到文件
+  file_output: true
+  # 日志文件轮转
+  rotation:
+    max_bytes: 10485760  # 10MB
+    backup_count: 5
+
+# API配置
+api:
+  # 请求限制
+  rate_limit:
+    enabled: true
+    requests_per_minute: 60
+  # 认证
+  authentication:
+    enabled: false
+    method: 'jwt'  # jwt, api_key
+  # CORS配置
+  cors:
+    enabled: true
+    origins: ['*']
+
+# 监控配置
+monitoring:
+  # Prometheus指标
+  metrics:
+    enabled: true
+    port: 9090
+  # 健康检查
+  health_check:
+    enabled: true
+    interval: 60  # 秒
+  # 数据漂移检测
+  drift_detection:
+    enabled: true
+    method: 'ks_test'  # ks_test, chi2_test
+    threshold: 0.05

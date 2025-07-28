@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # 预测API服务
+  prediction-api:
+    build: .
+    container_name: power-prediction-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=${DB_HOST:-39.96.192.52}
+      - DB_PORT=${DB_PORT:-13306}
+      - DB_USER=${DB_USER:-xxx}
+      - DB_PASSWORD=${DB_PASSWORD:-abc}
+      - DB_NAME=${DB_NAME:-data_collection}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./models:/app/models
+      - ./logs:/app/logs
+      - ./config:/app/config
+    restart: unless-stopped
+    networks:
+      - power-network
+
+  # Prometheus监控（可选）
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: power-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: unless-stopped
+    networks:
+      - power-network
+
+  # Grafana可视化（可选）
+  grafana:
+    image: grafana/grafana:latest
+    container_name: power-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+    networks:
+      - power-network
+
+volumes:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  power-network:
+    driver: bridge
