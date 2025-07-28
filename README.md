@@ -241,6 +241,6 @@ A: 建议：
 
 ## 联系方式
 
-- 项目维护者：[Your Name]
-- Email: [your.email@example.com]
+- 项目维护者：[zelda3721]
+- Email: [zelda3721@yahoo.co.jp]
 - Issue: [GitHub Issues]
