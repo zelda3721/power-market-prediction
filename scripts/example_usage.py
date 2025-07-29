@@ -13,6 +13,10 @@ import seaborn as sns
 # 添加项目根目录到Python路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# 加载环境变量
+from dotenv import load_dotenv
+load_dotenv()
+
 from src.data.database import DatabaseManager
 from src.data.dao import PowerMarketDAO
 from src.preprocessing.preprocessor import DataPreprocessor
@@ -78,7 +82,14 @@ def main():
         print(f"时间点数: {len(pred_features)}")
         print(f"负荷预测范围: {pred_features['load_forecast'].min():.2f} - {pred_features['load_forecast'].max():.2f}")
     
-    # 7. 简单的数据可视化
+    # 7. 获取历史实际数据（用于构建滞后特征）
+    print("\n6. 获取历史实际数据...")
+    history_data = dao.get_historical_actuals(start_date, end_date)
+    if not history_data.empty:
+        print(f"历史数据行数: {len(history_data)}")
+        print(f"包含的列: {list(history_data.columns)[:10]}...")
+    
+    # 8. 简单的数据可视化
     if not price_data.empty:
         print("\n6. 生成数据可视化...")
         
