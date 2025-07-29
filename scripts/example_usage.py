@@ -36,16 +36,17 @@ def main():
     print("\n2. 获取历史电价数据...")
     end_date = date.today() - timedelta(days=1)
     start_date = end_date - timedelta(days=30)
-    
+    # start_date = date(2025, 7, 1)
+    # end_date = date(2025, 7, 15)
+
     price_data = dao.get_price_data(start_date, end_date)
     print(f"获取到 {len(price_data)} 条电价数据")
     print(f"日前电价范围: {price_data['day_ahead_price'].min():.2f} - {price_data['day_ahead_price'].max():.2f}")
     print(f"实时电价范围: {price_data['real_time_price'].min():.2f} - {price_data['real_time_price'].max():.2f}")
     
-    # 4. 获取某一天的综合特征
+    # 4. 获取综合特征数据
     print("\n3. 获取综合特征数据...")
-    target_date = end_date
-    comprehensive_data = dao.get_comprehensive_features(target_date, target_date)
+    comprehensive_data = dao.get_comprehensive_features(start_date, end_date)
     
     if not comprehensive_data.empty:
         print(f"特征列数: {len(comprehensive_data.columns)}")
@@ -100,22 +101,22 @@ def main():
         sample_date = price_data['target_date'].iloc[-96:]
         axes[0, 0].plot(price_data['time_interval'].iloc[-96:], 
                        price_data['day_ahead_price'].iloc[-96:], 
-                       label='日前电价', marker='o', markersize=3)
+                       label='Day_Ahead_Price', marker='o', markersize=3)
         axes[0, 0].plot(price_data['time_interval'].iloc[-96:], 
                        price_data['real_time_price'].iloc[-96:], 
-                       label='实时电价', marker='s', markersize=3)
-        axes[0, 0].set_title(f'{sample_date.iloc[0]} 电价曲线')
-        axes[0, 0].set_xlabel('时间点')
-        axes[0, 0].set_ylabel('电价 (元/MWh)')
+                       label='Real_Time_Price', marker='s', markersize=3)
+        axes[0, 0].set_title(f'{sample_date.iloc[0]} Price Curve')
+        axes[0, 0].set_xlabel('time_point')
+        axes[0, 0].set_ylabel('price (YUAN/MWh)')
         axes[0, 0].legend()
         axes[0, 0].grid(True, alpha=0.3)
         
         # 电价分布图
-        axes[0, 1].hist(price_data['day_ahead_price'], bins=50, alpha=0.5, label='日前电价')
-        axes[0, 1].hist(price_data['real_time_price'], bins=50, alpha=0.5, label='实时电价')
-        axes[0, 1].set_title('电价分布')
-        axes[0, 1].set_xlabel('电价 (元/MWh)')
-        axes[0, 1].set_ylabel('频次')
+        axes[0, 1].hist(price_data['day_ahead_price'], bins=50, alpha=0.5, label='Day_Ahead_Price')
+        axes[0, 1].hist(price_data['real_time_price'], bins=50, alpha=0.5, label='Real_Time_Price')
+        axes[0, 1].set_title('Price Distribution')
+        axes[0, 1].set_xlabel('price (YUAN/MWh)')
+        axes[0, 1].set_ylabel('Frequency')
         axes[0, 1].legend()
         
         # 日前vs实时电价散点图
@@ -125,18 +126,18 @@ def main():
         axes[1, 0].plot([price_data['day_ahead_price'].min(), price_data['day_ahead_price'].max()],
                        [price_data['day_ahead_price'].min(), price_data['day_ahead_price'].max()],
                        'r--', label='y=x')
-        axes[1, 0].set_title('日前电价 vs 实时电价')
-        axes[1, 0].set_xlabel('日前电价 (元/MWh)')
-        axes[1, 0].set_ylabel('实时电价 (元/MWh)')
+        axes[1, 0].set_title('Day_Ahead_Price vs Real_Time_Price')
+        axes[1, 0].set_xlabel('Day_Ahead_Price (YUAN/MWh)')
+        axes[1, 0].set_ylabel('Real_Time_Price (YUAN/MWh)')
         axes[1, 0].legend()
         
         # 电价差值分布
         price_diff = price_data['real_time_price'] - price_data['day_ahead_price']
         axes[1, 1].hist(price_diff, bins=50, edgecolor='black')
-        axes[1, 1].axvline(x=0, color='r', linestyle='--', label='零差值')
-        axes[1, 1].set_title('实时电价与日前电价差值分布')
-        axes[1, 1].set_xlabel('价差 (元/MWh)')
-        axes[1, 1].set_ylabel('频次')
+        axes[1, 1].axvline(x=0, color='r', linestyle='--', label='Zero Difference')
+        axes[1, 1].set_title('Difference Distribution Of Real_Time_Price And Day_Ahead_Price')
+        axes[1, 1].set_xlabel('Spread (YUAN/MWh)')
+        axes[1, 1].set_ylabel('Frequency')
         axes[1, 1].legend()
         
         plt.tight_layout()

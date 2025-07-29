@@ -192,3 +192,6 @@ notebooks/*.pdf
 reports/
 data_quality_report*.html
 !reports/.gitkeep
+
+CLAUDE.md
+*.png
